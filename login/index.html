@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cipherTracer | Terminal v2.1</title>
+    <link rel="shortcut icon" href="/front/assets/image/eye.svg" type="image/x-icon">
+
+    <style>
+        :root {
+            --bg-deep: #030303;
+            --accent-red: #ff0000;
+            --dim-red: #3a0000;
+            --grid-color: rgba(255, 0, 0, 0.08); /* Grade um pouco mais clara */
+            --text-primary: #ffffff;
+            --text-secondary: #555;
+            --glass: rgba(10, 10, 10, 0.95);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #circuit-canvas { 
+            position: absolute; 
+            inset: 0;
+            z-index: 0; 
+        }
+
+        .vignette { 
+            position: absolute; 
+            inset: 0; 
+            background: radial-gradient(circle at center, transparent 10%, rgba(0, 0, 0, 0.8) 100%); 
+            z-index: 1; 
+            pointer-events: none; 
+        }
+
+        header, main, footer { position: relative; z-index: 10; pointer-events: none; }
+        header *, main *, footer * { pointer-events: auto; }
+
+        header { 
+            padding: 2rem 5%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        
+        .logo-text { 
+            font-size: 0.9rem; 
+            font-weight: 300; 
+            letter-spacing: 0.4em; 
+            text-transform: uppercase; 
+        }
+        .logo-text b { font-weight: 800; color: var(--accent-red); }
+
+        .sys-status {
+            font-family: monospace;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+
+        main { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 0 10%;
+        }
+        
+        .hero-title { 
+            font-size: clamp(2.5rem, 8vw, 5rem); 
+            font-weight: 200; 
+            letter-spacing: -0.04em;
+            margin-bottom: 0.5rem;
+        }
+        .hero-title span { font-weight: 600; }
+        
+        .hero-subtitle { 
+            font-size: clamp(0.5rem, 1.2vw, 0.7rem); 
+            color: var(--accent-red); 
+            letter-spacing: 0.8em; 
+            text-transform: uppercase; 
+            text-align: center;
+            margin-bottom: 4rem; 
+            opacity: 0.7;
+        }
+        
+        .cta-group { display: flex; gap: 2rem; }
+        
+        .btn { 
+            background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            padding: 1.2rem 3.5rem; 
+            color: #fff; 
+            font-size: 0.7rem; 
+            letter-spacing: 0.4em; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            text-transform: uppercase;
+        }
+
+        .btn:hover { 
+            border-color: var(--accent-red); 
+            background: rgba(255, 0, 0, 0.05);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.15);
+        }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.4s;
+            backdrop-filter: blur(8px);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal-content {
+            background: var(--glass); 
+            border: 1px solid var(--dim-red);
+            padding: 3rem; 
+            width: 90%; 
+            max-width: 400px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none;
+            color: var(--text-secondary); font-size: 1.2rem; cursor: pointer;
+        }
+
+        input {
+            width: 100%; background: rgba(255,0,0,0.02); border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem; color: #fff; font-family: monospace; font-size: 0.8rem; margin-top: 0.5rem; margin-bottom: 1.5rem;
+            outline: none;
+        }
+        input:focus { border-color: var(--accent-red); }
+
+        .btn-submit { 
+            width: 100%; padding: 1rem; background: var(--accent-red); 
+            color: #fff; font-weight: bold; border: none; cursor: pointer;
+            letter-spacing: 0.3em; font-size: 0.7rem; text-transform: uppercase;
+        }
+
+        footer { 
+            padding: 2rem 5%; 
+            font-family: monospace; 
+            font-size: 0.6rem; 
+            color: #222; 
+            letter-spacing: 0.2em;
+        }
+
+        #res,#res-cad{
+            text-align: center;
+            color: #ff0000;
+            margin: 25px auto 0 auto;
+        }
+        .loader {
+            
+        height: 5px;
+        width: 5px;
+        color: #ff0000;
+        box-shadow: -10px -10px 0 5px,
+                    -10px -10px 0 5px,
+                    -10px -10px 0 5px,
+                    -10px -10px 0 5px;
+        animation: loader-38 6s infinite;
+      }
+
+      /* Overlay escuro */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Popup central */
+.popup {
+  position: absolute;
+  width: 90%;
+  max-width: 450px;
+  background: #090909;
+  border: 1px solid #ff1a1a;
+  padding: 40px 30px;
+  text-align: center;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  
+}
+
+/* Título estilo TRON */
+.titulo {
+  color: #ff1a1a;
+  letter-spacing: 6px;
+  font-weight: 400;
+  margin-bottom: 30px;
+}
+
+/* Mensagem */
+.mensagem {
+  margin-bottom: 30px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* Botão */
+.popup button {
+  width: 100%;
+  padding: 15px;
+  background: #ff1a1a;
+  border: none;
+  color: white;
+  letter-spacing: 4px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.popup button:hover {
+  background: #090909;
+  color: #ff1a1a;
+  border: 1px solid #ff1a1a;
+}
+
+/* Botão fechar */
+.close {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  color: #555;
+  cursor: pointer;
+  font-size: 18px;
+}
+.close:hover {
+  color: red;
+}
+
+      @keyframes loader-38 {
+        0% {
+          box-shadow: -10px -10px 0 5px,
+                      -10px -10px 0 5px,
+                      -10px -10px 0 5px,
+                      -10px -10px 0 5px;
+        }
+        8.33% {
+          box-shadow: -10px -10px 0 5px,
+                      10px -10px 0 5px,
+                      10px -10px 0 5px,
+                      10px -10px 0 5px;
+        }
+        16.66% {
+          box-shadow: -10px -10px 0 5px,
+                      10px -10px 0 5px,
+                      10px 10px 0 5px,
+                      10px 10px 0 5px;
+        }
+        24.99% {
+          box-shadow: -10px -10px 0 5px,
+                      10px -10px 0 5px,
+                      10px 10px 0 5px,
+                      -10px 10px 0 5px;
+        }
+        33.32% {
+          box-shadow: -10px -10px 0 5px,
+                      10px -10px 0 5px,
+                      10px 10px 0 5px,
+                      -10px -10px 0 5px;
+        }
+        41.65% {
+          box-shadow: 10px -10px 0 5px,
+                      10px -10px 0 5px,
+                      10px 10px 0 5px,
+                      10px -10px 0 5px;
+        }
+        49.98% {
+          box-shadow: 10px 10px 0 5px,
+                    10px 10px 0 5px,
+                    10px 10px 0 5px,
+                    10px 10px 0 5px;
+        }
+        58.31% {
+          box-shadow: -10px 10px 0 5px,
+                      -10px 10px 0 5px,
+                      10px 10px 0 5px,
+                      -10px 10px 0 5px;
+        }
+        66.64% {
+          box-shadow: -10px -10px 0 5px,
+                      -10px -10px 0 5px,
+                      10px 10px 0 5px,
+                      -10px 10px 0 5px;
+        }
+        74.97% {
+          box-shadow: -10px -10px 0 5px,
+                      10px -10px 0 5px,
+                      10px 10px 0 5px,
+                      -10px 10px 0 5px;
+        }
+        83.3% {
+          box-shadow: -10px -10px 0 5px,
+                      10px 10px 0 5px,
+                      10px 10px 0 5px,
+                      -10px 10px 0 5px;
+        }
+        91.63% {
+          box-shadow: -10px -10px 0 5px,
+                      -10px 10px 0 5px,
+                      -10px 10px 0 5px,
+                      -10px 10px 0 5px;
+        }
+        100% {
+          box-shadow: -10px -10px 0 5px,
+                      -10px -10px 0 5px,
+                      -10px -10px 0 5px,
+                      -10px -10px 0 5px;
+        }
+      }
+
+    
+    </style>
+</head>
+<body>
+
+    <canvas id="circuit-canvas"></canvas>
+    <div class="vignette"></div>
+
+    <header>
+        <div class="logo-text">CIPHER<b>TRACER</b></div>
+        <div class="sys-status">0x8821_TRACE // GRID: SECURE</div>
+    </header>
+
+    <main>
+        <h1 class="hero-title">cipher<span>Tracer</span></h1>
+        <p class="hero-subtitle">Onde os dados não deixam sombras.</p>
+        <div class="cta-group">
+            <button class="btn" onclick="openModal('login')">Login</button>
+            <button class="btn" onclick="openModal('register')">NOVO_ACESSO</button>
+        </div>
+    </main>
+
+    <div id="modal-login" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModals()">✕</button>
+            <h2 style="font-weight: 200; letter-spacing: 0.4em; margin-bottom: 2rem; font-size: 0.8rem; color: var(--accent-red);">SECURE_ACCESS</h2>
+            <input type="text" placeholder="MAIL_TAG" id="email">
+            <input type="password" placeholder="********" id="pass">
+            <button class="btn-submit" id="login">ACESSAR</button>
+            <div id="res">  
+                <!-- <span class="loader"></span>-->
+            </div>
+           
+        </div>
+    </div>
+
+    <div id="modal-register" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModals()">✕</button>
+            <h2 style="font-weight: 200; letter-spacing: 0.4em; margin-bottom: 2rem; font-size: 0.8rem; color: var(--accent-red);">NOVO_CADASTRO</h2>
+            <input type="text" placeholder="IDENT_USUARIO" id="nome-create">
+            <input type="email" placeholder="IDENT_EMAIL" id="email-create">
+            <input type="number" placeholder="NUMERO(99) 9 9999-9999" id="numero-create">
+            <input type="password" placeholder="CHAVE_ACESSO" id="senha-create">
+            <input type="password" placeholder="REPETIR_CHAVE" id="senhaT-create">
+
+            <button id="active-btn" class="btn-submit">ATIVAR_PERFIL</button>
+            <div id="res-cad"></div>
+        </div>
+    </div>
+
+    <footer>
+        UPLINK_STATUS: ACTIVE // LATENCY: 0.002ms // 256-BIT_ENCRYPTION
+    </footer>
+    <script src="/front/assets/auth/domain.js"></script>
+    <script src="/front/assets/login/index.js"></script>
+    <script>
+ 
+        const canvas = document.getElementById('circuit-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, nodes = [];
+        const GRID_STEP = 60;
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            nodes = Array.from({length: 30}, () => new DataStream());
+        }
+
+        class DataStream {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.floor(Math.random() * (width / GRID_STEP)) * GRID_STEP;
+                this.y = Math.floor(Math.random() * (height / GRID_STEP)) * GRID_STEP;
+                this.history = [];
+                this.maxHistory = 8 + Math.random() * 10;
+                this.speed = 1.5;
+                this.dir = Math.floor(Math.random() * 4);
+                this.life = Math.random() * 150 + 100;
+            }
+            update() {
+                this.history.push({x: this.x, y: this.y});
+                if(this.history.length > this.maxHistory) this.history.shift();
+                if(Math.random() < 0.03) this.dir = Math.floor(Math.random() * 4);
+                if (this.dir === 0) this.y -= this.speed;
+                else if (this.dir === 1) this.x += this.speed;
+                else if (this.dir === 2) this.y += this.speed;
+                else if (this.dir === 3) this.x -= this.speed;
+                this.life--;
+                if(this.life <= 0 || this.x < 0 || this.x > width || this.y < 0 || this.y > height) this.reset();
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.lineWidth = 1;
+                // Trilha mais suave
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.12)';
+                for(let i = 0; i < this.history.length; i++) {
+                    ctx.lineTo(this.history[i].x, this.history[i].y);
+                }
+                ctx.stroke();
+
+                // Cabeça da partícula com brilho reduzido
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = 'red';
+                ctx.fillRect(this.x - 1, this.y - 1, 2, 2);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function drawGrid() {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.08)'; // Grade mais visível
+            ctx.lineWidth = 0.5;
+            for (let x = 0; x <= width; x += GRID_STEP) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+            for (let y = 0; y <= height; y += GRID_STEP) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+            ctx.stroke();
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(3, 3, 3, 0.3)'; 
+            ctx.fillRect(0, 0, width, height);
+            drawGrid();
+            nodes.forEach(n => { n.update(); n.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        function openModal(id) { document.getElementById(`modal-${id}`).classList.add('active'); }
+        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); res("") }
+        window.onclick = (e) => { if (e.target.classList.contains('modal-overlay')) closeModals(); }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+    </script>
+</body>
+</html>
