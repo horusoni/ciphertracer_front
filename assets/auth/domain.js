@@ -1,1 +1,1 @@
-const domain = "http://192.168.1.2:4444"
+const domain = "https://ciphertracer-eta.vercel.app"
