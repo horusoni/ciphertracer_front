@@ -51,7 +51,7 @@ const login = async ( e ) =>{
      };
     
 
-    if(response.ok){ window.location.href = "/front/painel/";}
+    if(response.ok){ window.location.href = "/painel/";}
    
     return data;
 }
@@ -68,7 +68,7 @@ async function checkIfLogged() {
     });
 
     if (response.ok) {
-      window.location.href = "/front/painel/";
+      window.location.href = "/painel/";
     }
   } catch (err) {
     // se der erro, apenas permanece no login
