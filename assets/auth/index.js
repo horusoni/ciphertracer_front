@@ -5,12 +5,12 @@ async function protectPage() {
     });
 
     if (!response.ok) {
-      window.location.href = "/front/login/";
+      window.location.href = "/login/";
       return;
     }
 
   } catch (err) {
-    window.location.href = "/front/login/";
+    window.location.href = "/login/";
   }
 }
 
