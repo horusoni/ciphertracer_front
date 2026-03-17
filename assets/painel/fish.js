@@ -5,7 +5,7 @@ const modal = document.getElementById("ipModal");
 const modalData = document.getElementById("modalData");
 const closeModal = document.getElementById("closeModal");
 
-const pishDomain = "https://ciphertracer-eta.vercel.app"
+const pishDomain = "https://account-dusky.vercel.app"
 
 listTemplate()
 loadCaptures();
