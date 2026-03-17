@@ -5,7 +5,7 @@ const modal = document.getElementById("ipModal");
 const modalData = document.getElementById("modalData");
 const closeModal = document.getElementById("closeModal");
 
-const pishDomain = "http://192.168.1.2:5500"
+const pishDomain = "https://ciphertracer-eta.vercel.app"
 
 listTemplate()
 loadCaptures();
