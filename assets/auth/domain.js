@@ -1,1 +1,1 @@
-const domain = "https://ciphertracer-eta.vercel.app"
+const domain = "https://api.ciphertracer.com.br"
