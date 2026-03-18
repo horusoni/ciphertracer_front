@@ -63,7 +63,9 @@ async function logout() {
 
     const data = await res.json()
     if(res.ok){
-        location.reload()
+        setTimeout(()=>{
+            location.reload()
+        },1000)
     }
 
     return data
