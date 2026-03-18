@@ -53,7 +53,7 @@ async function listTemplate() {
 
         <span id="link-cont" class="card-title">
           link:<br>
-          ${pishDomain + dados[i].path}?ref=${uid}
+          ${pishDomain.toLowerCase() + dados[i].path.toLowerCase()}?ref=${uid.toLowerCase()}
         </span>
 
       </div>
