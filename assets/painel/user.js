@@ -22,7 +22,6 @@ async function buscarLogs() {
 
 async function listInfoUser(){
     const user = await buscarUsuario()
-    console.log(user)
     let nome = user.user.nome.split(" ")[0] 
     let ip = user.atualIp
     let statusPlan = user.plano
