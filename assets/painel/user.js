@@ -26,7 +26,8 @@ async function listInfoUser(){
     let nome = user.user.nome.split(" ")[0] 
     let ip = user.atualIp
     let statusPlan = user.plano
-    let dataExp = user.paymentUser[0].data_exp
+    let i_data_exp = user.paymentUser.length - 1
+    let dataExp = user.paymentUser[i_data_exp].data_exp
     document.querySelector("#username").textContent = `${nome}`
     document.querySelector("#ip").textContent = ip
     document.querySelectorAll(".plan")[0].innerText = dataExp.split("T")[0]
