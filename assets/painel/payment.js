@@ -53,7 +53,7 @@ function controlModal(data){
                 <div id="pix-title">
                     <h2>
                         <p>Semanal</p>
-                        <p>R$49,90</p>
+                        <p>R$19,90</p>
                     </h2>
                 </div>
 
